@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'create_article_screen.dart'; // Tambahkan di bagian import
 import 'profile_screen.dart'; // Tambahkan di bagian import
 import 'home_screen.dart'; // Tambahkan di bagian import
+import 'services/api_service.dart';
 
 // Bagian 1: Definisi Tema Aplikasi
 class AppTheme {
@@ -53,69 +54,42 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  int _selectedIndex = 3; // 'Notifications' adalah indeks ke-3
+  int _selectedIndex = 3;
+  List<NotificationGroup> notificationGroups = [];
 
-  // Data notifikasi yang sudah distrukturkan
-  final List<NotificationGroup> notificationGroups = [
-    NotificationGroup(
-      title: 'Breaking News',
-      items: [
-        NotificationItem(
-          imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuA3kgRJWqrh1nw_v4eiaEDN18RBvgX9uETKz7yUt2UkXeXr58okuXKyDbaO1IqhfdF67Jzw7yiR8lTorqCG9bQBCSN9I1fODu8vczI2EmckV0JH0fHslT9_xqxxv8MefNCiYCRs8P7FGjzY13PYiMWiOehSk9lAH7sTQHTX1eSu2rlX1jLyl1cKNJ6oFpgPC1Ti9IA8ZuArdhtY13aOWNZ-HRV3NvHShCVsoCxG2tUEC_p3aahEKTGOzyRJPP343w6S6g4rE-pg3qXs",
-          content: [TextSpan(text: 'Major earthquake hits coastal region')],
-          timeAgo: '1h ago',
-          trailingIcon: Icons.campaign,
-          iconColor: AppTheme.primaryColor,
+  @override
+  void initState() {
+    super.initState();
+    fetchTrendingNotifications();
+  }
+
+  Future<void> fetchTrendingNotifications() async {
+    // Contoh fetch dari API trending
+    // Ganti ApiService.getTrendingArticles sesuai implementasi kamu
+    final result = await ApiService.getTrendingArticles();
+    final articles = result['data']['articles'] as List;
+    setState(() {
+      notificationGroups = [
+        NotificationGroup(
+          title: 'Trending Articles',
+          items: articles.map((article) => NotificationItem(
+            imageUrl: article['imageUrl'] ?? '',
+            isCircularImage: false,
+            content: [
+              TextSpan(
+                text: article['title'] ?? '',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const TextSpan(text: ' is now trending!'),
+            ],
+            timeAgo: article['publishedAt'] ?? '',
+            trailingIcon: Icons.trending_up,
+            iconColor: AppTheme.primaryColor,
+          )).toList(),
         ),
-      ],
-    ),
-    NotificationGroup(
-      title: 'Personalized Updates',
-      items: [
-        NotificationItem(
-          imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuBr7LjPsNQ7ncqJfqzxCI5LUQUeNoaVmiz5Nr6tV3xYRIan4wEhlCZU8w50aXUy7IC1UEHOvXhcN_hhXUvFlhgKtOLB9QoK2GRjEuVBwIAYE95mPiGP2nI8VXEkg8nZHCxfTNFFNs7HM6Sv8Tw3YU0c1-QcTO8ubIZrBSHz6LMoy2s78lkjDt-tzKKhhGAVkD2y8RkjeqzP7krlycGXZnbI-yXdcvY6c6ZHa1WV3liBDVf7CREVHmgU6pjMDAP90pKqlsRYjqNcfvkr",
-          content: [TextSpan(text: 'Your favorite author, Amelia Stone, has a new article')],
-          timeAgo: '2h ago',
-          trailingIcon: Icons.article,
-          iconColor: AppTheme.primaryColor,
-        ),
-        NotificationItem(
-          imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuArpZjqlQYEWRcX1ZHKXVX8WfKOaajTyKW_fcnYStghuhNLjhbZOAxnpB0fl5COA2JOpUSbyb0QiLS7PLLgWGGKapHnzTfjnQ6fgZgfCsM5Ni6sueoxWDNyx5WPD5tXFF5AHqskATLb8k9jIMM32CzUQIPHRyPZGyoYmktH6xansq_U6Lbg5Zb-CvFlf40GPmLfEzz-jwfx6YDjglHwTVZJedwKiBXjupv2aNdh1sM-Bl1Y6jHZtQQgcoMxYTjUpRatyU6vs-Qh-8Ru",
-          content: [TextSpan(text: 'Trending: Climate change solutions')],
-          timeAgo: '3h ago',
-          trailingIcon: Icons.trending_up,
-          iconColor: AppTheme.primaryColor,
-        ),
-      ],
-    ),
-     NotificationGroup(
-      title: 'Interactions',
-      items: [
-        NotificationItem(
-          imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuAkAwX_O7fA1r1gSyycjed1yw4VM70KKnG72rCK_qTkAaWzJO-dNzXUaX17i9atf8N2fVpya3f1o3jBeMlnAOmLH9weRQvvE4PlvkZzzzK_pax-ZXy8fjlPNr3Hgkj_IxLVEbGrvlsuPK6tVZHnDwzRVobO8IN8ctUUUq-PI51nXl9hwiOeq3LqKXPm_2EjzvplJLf0GyLGHFL1gUjUdvhFcFPTRM1wSKigWrCK2IgiiEeztK7kt3LfpILtnoII6p4yd9sqMDqPmHr8",
-          isCircularImage: true,
-          content: [
-            const TextSpan(text: 'Ethan Carter ', style: TextStyle(fontWeight: FontWeight.bold)),
-            const TextSpan(text: 'liked your comment on the latest tech review', style: TextStyle(fontWeight: FontWeight.normal, color: AppTheme.textSecondary)),
-          ],
-          timeAgo: '4h ago',
-          trailingIcon: Icons.favorite,
-          iconColor: AppTheme.red,
-        ),
-         NotificationItem(
-          imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuAUYVF3ULKIpv7J04E7O0wsb51n83DfO9PdmDtVmnuAvZG4rglr9DxhTAgxwlVO-L4t1623Et6AmocHiWpb2vjGJjBjIDZvseoxFwndQ4c0Smo95KOi-g2ps0FmTs6obRGYRHeRibojWNJ3wAft9hUuonKPWnUHJJAecvl99PcdejYqaSn4geaFX5PZ5mORkDe28I1eQKZ_OZvLA30WXn4aVhKGkCVc8VVIFW-EZqsDiILxUpuLqnUMY8KNRNUlqM7JIO1KJT_4fxFd",
-          isCircularImage: true,
-          content: [
-            const TextSpan(text: 'Sophia Clark ', style: TextStyle(fontWeight: FontWeight.bold)),
-            const TextSpan(text: 'replied to your post about local events', style: TextStyle(fontWeight: FontWeight.normal, color: AppTheme.textSecondary)),
-          ],
-          timeAgo: '5h ago',
-          trailingIcon: Icons.comment,
-          iconColor: AppTheme.primaryColor,
-        ),
-      ],
-    ),
-  ];
+      ];
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

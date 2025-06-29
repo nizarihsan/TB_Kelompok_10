@@ -4,6 +4,7 @@ import 'home_screen.dart'; // Tambahkan ini di bagian import
 import 'create_article_screen.dart'; // Tambahkan ini di bagian import
 import 'your_articles_screen.dart'; // Tambahkan ini di bagian import
 import 'notifications_screen.dart'; // Tambahkan di bagian import
+import 'package:shared_preferences/shared_preferences.dart'; // Tambahkan ini
 
 // Bagian 1: Definisi Tema Aplikasi
 // Warna-warna ini diambil dari kelas-kelas Tailwind (slate-50, slate-900, dll).
@@ -27,8 +28,31 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Indeks untuk BottomNavigationBar, 'Profile' adalah indeks ke-4 (0-based).
   int _selectedIndex = 4;
+
+  // Tambahkan variabel user
+  String? name;
+  String? email;
+  String? title;
+  String? avatar;
+
+  @override
+  void initState() {
+    super.initState();
+    loadUserData();
+  }
+
+  // Fungsi untuk mengambil data user dari SharedPreferences
+  Future<void> loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      name = prefs.getString('user_name') ?? 'User';
+      email = prefs.getString('user_email') ?? '';
+      title = prefs.getString('user_title') ?? '';
+      avatar = prefs.getString('user_avatar') ??
+          "https://ui-avatars.com/api/?name=User";
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,19 +117,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: [
             // Avatar dengan efek 'ring'
             Container(
-              padding: const EdgeInsets.all(4.0), // Ini adalah 'ring-offset'
+              padding: const EdgeInsets.all(4.0),
               decoration: const BoxDecoration(
                 color: AppTheme.primaryColor,
                 shape: BoxShape.circle,
               ),
-              child: const CircleAvatar(
-                radius: 64, // size-32 -> 128px
-                backgroundImage: NetworkImage("https://lh3.googleusercontent.com/aida-public/AB6AXuAB11Q2frXXGO40QYGDlN8C8CxqyU68aC1TP6L6W78VnqRFP3J_ZPheI9mbAy_WTpLo9EDccGiTfTp-s9r9Yqu_PfVlWJqviAtsSj09TpdKqBE-t3ir1D-ACQC3Xas7XjT5pA1CHuayJCb-Qz6gPEXUESU_aa3vyO0xD4H6A9qBntkUCFD7l7i3cob-Em__yJT4R4A-l-BAjpqWT0K1k9KUEjCF6ZFc6JRjMNdf0sURKxK6saEeMHCTQOb91yanpXpyxE_Gj3Em3U3z"),
+              child: CircleAvatar(
+                radius: 64,
+                backgroundImage: NetworkImage(avatar ??
+                    "https://ui-avatars.com/api/?name=User"),
               ),
             ),
             const SizedBox(height: 16),
             Text(
-              'Sophia Carter',
+              name ?? 'User',
               style: GoogleFonts.newsreader(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -114,12 +139,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              'Editor',
+              title ?? '',
               style: GoogleFonts.notoSans(
                 fontSize: 18,
                 color: AppTheme.textMuted,
               ),
             ),
+            if (email != null && email!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4.0),
+                child: Text(
+                  email!,
+                  style: GoogleFonts.notoSans(
+                    fontSize: 14,
+                    color: AppTheme.textMuted,
+                  ),
+                ),
+              ),
           ],
         ),
       ),

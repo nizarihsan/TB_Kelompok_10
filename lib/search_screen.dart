@@ -101,21 +101,28 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   int _bottomNavIndex = 0;
   List<Article> _articles = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    fetchBookmarks();
+    fetchArticles();
   }
 
-  Future<void> fetchBookmarks() async {
-    // Pastikan ApiService.getBookmarks() memanggil endpoint /news/bookmarks/list
-    final result = await ApiService.getBookmarks();
-    setState(() {
-      _articles = (result['data']['articles'] as List)
-          .map((e) => Article.fromJson(e))
-          .toList();
-    });
+  Future<void> fetchArticles({int page = 1, int limit = 10, String? category}) async {
+    setState(() => _isLoading = true);
+    try {
+      final result = await ApiService.getArticles(page: page, limit: limit, category: category);
+      setState(() {
+        _articles = (result['data']['articles'] as List)
+            .map((e) => Article.fromJson(e))
+            .toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      // Handle error (tampilkan snackbar, dsb)
+    }
   }
 
   @override
@@ -123,8 +130,10 @@ class _SearchScreenState extends State<SearchScreen> {
     return Scaffold(
       backgroundColor: AppTheme.bodyBg,
       appBar: _buildAppBar(),
-      body: _buildBody(),
-      bottomNavigationBar: _buildBottomNavigationBar(), // Ganti di sini
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _buildBody(),
+      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
@@ -159,6 +168,9 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildBody() {
+    if (_articles.isEmpty) {
+      return const Center(child: Text('Tidak ada artikel.'));
+    }
     return ListView.separated(
       padding: const EdgeInsets.all(16.0),
       itemCount: _articles.length,
