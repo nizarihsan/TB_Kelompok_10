@@ -41,17 +41,23 @@ class Article {
   final String id;
   final String imageUrl;
   final String title;
-  final String description;
-  final String timeAgo;
   final String category;
+  final String publishedAt;
+  final String readTime;
+  final String content;
+  final String? authorName;
+  final String? authorAvatar;
 
   Article({
     required this.id,
     required this.imageUrl,
     required this.title,
-    required this.description,
-    required this.timeAgo,
     required this.category,
+    required this.publishedAt,
+    required this.readTime,
+    required this.content,
+    this.authorName,
+    this.authorAvatar,
   });
 
   factory Article.fromJson(Map<String, dynamic> json) {
@@ -59,9 +65,12 @@ class Article {
       id: json['id']?.toString() ?? '',
       imageUrl: json['imageUrl'] ?? '',
       title: json['title'] ?? '',
-      description: json['description'] ?? '',
-      timeAgo: json['timeAgo'] ?? '',
       category: json['category'] ?? '',
+      publishedAt: json['publishedAt'] ?? '',
+      readTime: json['readTime'] ?? '',
+      content: json['content'] ?? '',
+      authorName: json['author']?['name'],
+      authorAvatar: json['author']?['avatar'],
     );
   }
 }
@@ -90,7 +99,7 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  int _bottomNavIndex = 0; // Ganti dari _selectedIndex
+  int _bottomNavIndex = 0;
   List<Article> _articles = [];
 
   @override
@@ -100,6 +109,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<void> fetchBookmarks() async {
+    // Pastikan ApiService.getBookmarks() memanggil endpoint /news/bookmarks/list
     final result = await ApiService.getBookmarks();
     setState(() {
       _articles = (result['data']['articles'] as List)
