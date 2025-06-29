@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'services/api_service.dart';
 import 'models/article.dart';
+import 'services/api_service.dart';
 
 class ArticleDetailScreen extends StatefulWidget {
   final String articleId;
@@ -50,21 +50,37 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
     if (_article == null) return const Center(child: Text('Article not found'));
-    // Tampilkan detail artikel
     return Scaffold(
       appBar: AppBar(
         title: Text(_article!.title),
         actions: [
           IconButton(
-            icon: Icon(
-                _isBookmarked ? Icons.bookmark : Icons.bookmark_border),
+            icon: Icon(_isBookmarked ? Icons.bookmark : Icons.bookmark_border),
             onPressed: toggleBookmark,
           ),
         ],
       ),
-      body: Padding(
+      body: ListView(
         padding: const EdgeInsets.all(16.0),
-        child: Text(_article!.content),
+        children: [
+          Image.network(_article!.imageUrl, fit: BoxFit.cover),
+          const SizedBox(height: 16),
+          Text(_article!.title,
+              style:
+                  const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text(
+              '${_article!.category} • ${_article!.publishedAt} • ${_article!.readTime}'),
+          const SizedBox(height: 16),
+          Text(_article!.content),
+          const SizedBox(height: 24),
+          ListTile(
+            leading: CircleAvatar(
+                backgroundImage: NetworkImage(_article!.author.avatar)),
+            title: Text(_article!.author.name),
+            subtitle: Text(_article!.author.title),
+          ),
+        ],
       ),
     );
   }

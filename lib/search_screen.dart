@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:tb10/services/api_service.dart';
+import 'services/api_service.dart';
+import 'article_detail_screen.dart'; // Pastikan file ini ada dan berisi ArticleDetailScreen
+import 'create_article_screen.dart'; // Pastikan file ini ada dan berisi CreateArticleScreen
+import 'notifications_screen.dart'; // Pastikan file ini ada dan berisi NotificationsScreen
 
 // Bagian 1: Definisi Tema Aplikasi
 class AppTheme {
@@ -13,29 +16,52 @@ class AppTheme {
   static const Color navBorder = Color(0xFFE2E8F0);
   static const Color navIconActive = Color(0xFF1A202C);
   static const Color navIconInactive = Color(0xFF718096);
-  static const Color bodyBg = Color(0xFFF9FAFB); // bg-gray-50
+  static const Color bodyBg = Color(0xFFF6F8FA); // Added missing bodyBg
+}
+
+// Tambahkan widget ProfileScreen jika belum ada
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profile'),
+      ),
+      body: const Center(
+        child: Text('Profile Screen'),
+      ),
+    );
+  }
 }
 
 // Bagian 2: Model Data untuk Artikel
 class Article {
+  final String id;
   final String imageUrl;
   final String title;
   final String description;
   final String timeAgo;
+  final String category;
 
   Article({
+    required this.id,
     required this.imageUrl,
     required this.title,
     required this.description,
     required this.timeAgo,
+    required this.category,
   });
 
   factory Article.fromJson(Map<String, dynamic> json) {
     return Article(
+      id: json['id']?.toString() ?? '',
       imageUrl: json['imageUrl'] ?? '',
       title: json['title'] ?? '',
       description: json['description'] ?? '',
       timeAgo: json['timeAgo'] ?? '',
+      category: json['category'] ?? '',
     );
   }
 }
@@ -64,14 +90,13 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  int _selectedIndex = 0; // "Beranda" aktif secara default
-
-  List<Article> _articles = []; // Daftar artikel yang akan ditampilkan
+  int _bottomNavIndex = 0; // Ganti dari _selectedIndex
+  List<Article> _articles = [];
 
   @override
   void initState() {
     super.initState();
-    fetchBookmarks(); // Ambil data bookmark saat inisialisasi
+    fetchBookmarks();
   }
 
   Future<void> fetchBookmarks() async {
@@ -89,7 +114,7 @@ class _SearchScreenState extends State<SearchScreen> {
       backgroundColor: AppTheme.bodyBg,
       appBar: _buildAppBar(),
       body: _buildBody(),
-      bottomNavigationBar: _buildBottomNav(),
+      bottomNavigationBar: _buildBottomNavigationBar(), // Ganti di sini
     );
   }
 
@@ -127,165 +152,66 @@ class _SearchScreenState extends State<SearchScreen> {
     return ListView.separated(
       padding: const EdgeInsets.all(16.0),
       itemCount: _articles.length,
-      itemBuilder: (context, index) => ArticleCard(article: _articles[index]),
+      itemBuilder: (context, index) => ListTile(
+        leading: Image.network(_articles[index].imageUrl, width: 80, fit: BoxFit.cover),
+        title: Text(_articles[index].title),
+        subtitle: Text(_articles[index].category),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ArticleDetailScreen(articleId: _articles[index].id),
+            ),
+          );
+        },
+      ),
       separatorBuilder: (context, index) => const SizedBox(height: 24),
     );
   }
 
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppTheme.navBg,
-        border: Border(top: BorderSide(color: AppTheme.navBorder, width: 1.0)),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _BottomNavItem(
-                svgData: AppIcons.home,
-                label: 'Beranda',
-                isActive: _selectedIndex == 0,
-                onTap: () => setState(() => _selectedIndex = 0),
-              ),
-              _BottomNavItem(
-                svgData: AppIcons.forYou,
-                label: 'Untuk Anda',
-                isActive: _selectedIndex == 1,
-                onTap: () => setState(() => _selectedIndex = 1),
-              ),
-              _BottomNavItem(
-                svgData: AppIcons.save,
-                label: 'Simpan',
-                isActive: _selectedIndex == 2,
-                onTap: () => setState(() => _selectedIndex = 2),
-              ),
-              _BottomNavItem(
-                svgData: AppIcons.profile,
-                label: 'Profil',
-                isActive: _selectedIndex == 3,
-                onTap: () => setState(() => _selectedIndex = 3),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// Bagian 5: Widget Kustom untuk Kartu Artikel
-class ArticleCard extends StatelessWidget {
-  final Article article;
-  const ArticleCard({super.key, required this.article});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: AppTheme.cardBg,
-      elevation: 4.0,
-      // ignore: deprecated_member_use
-      shadowColor: Colors.black.withOpacity(0.1),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child: Image.network(
-              article.imageUrl,
-              fit: BoxFit.cover,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  article.title,
-                  style: GoogleFonts.newsreader(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  article.description,
-                  style: GoogleFonts.newsreader(
-                    fontSize: 14,
-                    color: AppTheme.textSecondary,
-                    height: 1.5,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  article.timeAgo,
-                  style: GoogleFonts.newsreader(
-                    fontSize: 12,
-                    color: Colors.grey.shade500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Bagian 6: Widget Kustom untuk Item Navigasi Bawah
-class _BottomNavItem extends StatelessWidget {
-  final String svgData;
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-
-  const _BottomNavItem({
-    required this.svgData,
-    required this.label,
-    required this.isActive,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isActive ? AppTheme.navIconActive : AppTheme.navIconInactive;
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8.0),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                height: 28,
-                width: 28,
-                child: SvgPicture.string(
-                  svgData,
-                  colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                style: GoogleFonts.notoSans(
-                  fontSize: 11,
-                  color: color,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+  BottomNavigationBar _buildBottomNavigationBar() {
+    return BottomNavigationBar(
+      items: const <BottomNavigationBarItem>[
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+        BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Explore'),
+        BottomNavigationBarItem(icon: Icon(Icons.add_circle_outline), label: 'Create'),
+        BottomNavigationBarItem(icon: Icon(Icons.notifications_none), label: 'Notifications'),
+        BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
+      ],
+      currentIndex: _bottomNavIndex,
+      onTap: (index) {
+        if (index == 1) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const SearchScreen()),
+          );
+        } else if (index == 2) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CreateArticleScreen()),
+          );
+        } else if (index == 3) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const NotificationsScreen()),
+          );
+        } else if (index == 4) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ProfileScreen()),
+          );
+        } else {
+          setState(() => _bottomNavIndex = index);
+        }
+      },
+      type: BottomNavigationBarType.fixed,
+      selectedItemColor: AppTheme.primaryColor,
+      unselectedItemColor: AppTheme.textSecondary,
+      showUnselectedLabels: true,
+      selectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+      unselectedLabelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+      backgroundColor: AppTheme.navBg,
+      elevation: 5.0,
     );
   }
 }

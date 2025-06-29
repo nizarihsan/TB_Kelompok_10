@@ -25,16 +25,16 @@ class Article {
 
   factory Article.fromJson(Map<String, dynamic> json) {
     return Article(
-      id: json['id'],
-      title: json['title'],
-      category: json['category'],
-      publishedAt: json['publishedAt'],
-      readTime: json['readTime'],
-      imageUrl: json['imageUrl'],
-      isTrending: json['isTrending'],
-      tags: List<String>.from(json['tags']),
-      content: json['content'],
-      author: Author.fromJson(json['author']),
+      id: json['id'] ?? json['_id'] ?? '',
+      title: json['title'] ?? '',
+      category: json['category'] ?? '',
+      publishedAt: json['publishedAt'] ?? '',
+      readTime: json['readTime'] ?? '',
+      imageUrl: json['imageUrl'] ?? '',
+      isTrending: json['isTrending'] ?? false,
+      tags: List<String>.from(json['tags'] ?? []),
+      content: json['content'] ?? '',
+      author: Author.fromJson(json['author'] ?? {}),
     );
   }
 }
@@ -52,9 +52,9 @@ class Author {
 
   factory Author.fromJson(Map<String, dynamic> json) {
     return Author(
-      name: json['name'],
-      title: json['title'],
-      avatar: json['avatar'],
+      name: json['name'] ?? '',
+      title: json['title'] ?? '',
+      avatar: json['avatar'] ?? '',
     );
   }
 }

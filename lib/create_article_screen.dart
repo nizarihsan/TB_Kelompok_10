@@ -25,22 +25,128 @@ class CreateArticleScreen extends StatefulWidget {
 }
 
 class _CreateArticleScreenState extends State<CreateArticleScreen> {
-  // Indeks untuk BottomNavigationBar, 'Create' adalah indeks ke-2
-  int _selectedIndex = 2;
-  String? _selectedCategory = 'Technology';
-  final List<String> _categories = ['Technology', 'Science', 'Health', 'Business', 'Education'];
-
-  // Controller untuk mengambil nilai dari TextField
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _titleController = TextEditingController();
-  final TextEditingController _contentController = TextEditingController();
   final TextEditingController _imageUrlController = TextEditingController();
+  final TextEditingController _contentController = TextEditingController();
+  final TextEditingController _readTimeController = TextEditingController(text: '5 menit');
+  final TextEditingController _tagsController = TextEditingController();
+  String? _selectedCategory;
+  bool _isLoading = false;
+
+  final List<String> _categories = [
+    'Technology',
+    'Business',
+    'Health',
+    'General',
+    'Sports',
+    'Science',
+    'Entertainment'
+  ];
+
+  void handleCreateArticle() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    // Tags dipisah koma, lalu di-trim
+    List<String> tags = _tagsController.text
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+
+    final data = {
+      "title": _titleController.text.trim(),
+      "category": _selectedCategory!,
+      "readTime": _readTimeController.text.trim(),
+      "imageUrl": _imageUrlController.text.trim(),
+      "tags": tags,
+      "content": _contentController.text.trim(),
+    };
+
+    final result = await ApiService.createArticle(data);
+
+    setState(() => _isLoading = false);
+
+    if (result['success'] == true) {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Artikel berhasil dibuat!')),
+      );
+      // ignore: use_build_context_synchronously
+      Navigator.pop(context, true);
+    } else {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Gagal membuat artikel')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.backgroundColor,
       appBar: _buildAppBar(),
-      body: _buildBody(),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              TextFormField(
+                controller: _titleController,
+                decoration: const InputDecoration(labelText: 'Judul'),
+                validator: (v) => v == null || v.isEmpty ? 'Judul wajib diisi' : null,
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: _selectedCategory,
+                items: _categories
+                    .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
+                    .toList(),
+                onChanged: (val) => setState(() => _selectedCategory = val),
+                decoration: const InputDecoration(labelText: 'Kategori'),
+                validator: (v) => v == null || v.isEmpty ? 'Kategori wajib dipilih' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _readTimeController,
+                decoration: const InputDecoration(labelText: 'Waktu Baca (misal: 5 menit)'),
+                validator: (v) => v == null || v.isEmpty ? 'Waktu baca wajib diisi' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _imageUrlController,
+                decoration: const InputDecoration(labelText: 'URL Gambar'),
+                validator: (v) => v == null || v.isEmpty ? 'URL gambar wajib diisi' : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _tagsController,
+                decoration: const InputDecoration(
+                  labelText: 'Tags (pisahkan dengan koma, contoh: tech,news)',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _contentController,
+                decoration: const InputDecoration(labelText: 'Isi Artikel'),
+                maxLines: 8,
+                validator: (v) => v == null || v.isEmpty ? 'Isi artikel wajib diisi' : null,
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _isLoading ? null : handleCreateArticle,
+                child: _isLoading
+                    ? const CircularProgressIndicator()
+                    : const Text('Buat Artikel'),
+              ),
+            ],
+          ),
+        ),
+      ),
       bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
@@ -72,272 +178,6 @@ class _CreateArticleScreenState extends State<CreateArticleScreen> {
     );
   }
 
-  // Method untuk membangun konten utama halaman
-  Widget _buildBody() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Kolom input untuk Judul
-          _buildTextField(
-            controller: _titleController,
-            hintText: 'Title',
-            isTitle: true,
-          ),
-          const SizedBox(height: 24),
-          _buildCategoryDropdown(),
-          const SizedBox(height: 24.0),
-          // Kolom input untuk Konten Artikel
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: _imageUrlController,
-                decoration: InputDecoration(
-                  hintText: 'Enter image URL',
-                  filled: true,
-                  fillColor: const Color(0xFFE9EEF3),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                ),
-              ),
-              const SizedBox(height: 16), // <-- Spasi antar kolom
-              TextField(
-                controller: _contentController,
-                maxLines: 8,
-                decoration: InputDecoration(
-                  hintText: 'Write your article here...',
-                  filled: true,
-                  fillColor: const Color(0xFFE9EEF3),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          // Bagian 'Add to your post'
-          _buildAttachmentSection(),
-          const SizedBox(height: 32),
-          // Tombol untuk menyimpan atau mengirim artikel
-          _buildCreateButton(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCategoryDropdown() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Category',
-          style: GoogleFonts.notoSans(color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
-        ),
-        const SizedBox(height: 8.0),
-        DropdownButtonFormField<String>(
-          value: _selectedCategory,
-          items: _categories.map((String category) {
-            return DropdownMenuItem<String>(
-              value: category,
-              child: Text(category),
-            );
-          }).toList(),
-          onChanged: (newValue) {
-            setState(() {
-              _selectedCategory = newValue;
-            });
-          },
-          decoration: _inputDecoration(''),
-          style: GoogleFonts.notoSans(color: AppTheme.textPrimary),
-          icon: const Icon(Icons.keyboard_arrow_down, color: AppTheme.textSecondary),
-        ),
-      ],
-    );
-  }
-
-  // Tambahkan method _inputDecoration
-  InputDecoration _inputDecoration(String hintText) {
-    return InputDecoration(
-      hintText: hintText,
-      hintStyle: GoogleFonts.notoSans(color: AppTheme.accentColor),
-      filled: true,
-      fillColor: AppTheme.secondaryColor,
-      contentPadding: const EdgeInsets.all(16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12.0),
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12.0),
-        borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2.0),
-      ),
-    );
-  }
-
-  // Method untuk membangun kolom input yang dapat digunakan kembali
-  Widget _buildTextField({required String hintText, bool isTitle = false, int minLines = 1, required TextEditingController controller}) {
-    return TextField(
-      controller: controller,
-      style: GoogleFonts.notoSans(
-        fontSize: isTitle ? 18 : 16,
-        fontWeight: isTitle ? FontWeight.w600 : FontWeight.normal,
-        color: AppTheme.textPrimary,
-      ),
-      minLines: minLines,
-      maxLines: null, // Memungkinkan input untuk melebar
-      keyboardType: TextInputType.multiline,
-      decoration: InputDecoration(
-        hintText: hintText,
-        hintStyle: GoogleFonts.notoSans(color: AppTheme.accentColor),
-        filled: true,
-        fillColor: AppTheme.secondaryColor,
-        contentPadding: const EdgeInsets.all(16),
-        // Meniru border-transparent
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.0),
-          borderSide: BorderSide.none,
-        ),
-        // Meniru focus:ring-2
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12.0),
-          borderSide: const BorderSide(color: AppTheme.primaryColor, width: 2.0),
-        ),
-      ),
-    );
-  }
-
-  // Method untuk membangun bagian lampiran dengan grid
-  Widget _buildAttachmentSection() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Add to your post',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.blueGrey,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildCircleIconButton(
-                icon: Icons.image,
-                label: 'Image',
-                onTap: () {
-                  // aksi pilih gambar
-                },
-              ),
-              _buildCircleIconButton(
-                icon: Icons.videocam,
-                label: 'Video',
-                onTap: () {
-                  // aksi pilih video
-                },
-              ),
-              _buildCircleIconButton(
-                icon: Icons.link,
-                label: 'Link',
-                onTap: () {
-                  // aksi pilih link
-                },
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-        ],
-      ),
-    );
-  }
-
-  // Tambahkan builder berikut di bawah:
-  Widget _buildCircleIconButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return Column(
-      children: [
-        InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(32),
-          child: Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, size: 28, color: Colors.black87),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 14, color: Colors.black87),
-        ),
-      ],
-    );
-  }
-
-  // Method untuk membangun tombol 'Create'
-  Widget _buildCreateButton() {
-    return Center(
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF23A6F0), // Biru sesuai gambar
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12), // Rounded
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 8), // Tinggi tombol tipis
-            elevation: 0,
-          ),
-          onPressed: () async {
-            final result = await ApiService.createArticle({
-              "title": _titleController.text,
-              "category": _selectedCategory,
-              "readTime": "5 menit",
-              "imageUrl": _imageUrlController.text,
-              "tags": [],
-              "content": _contentController.text,
-            });
-            if (result['success']) {
-              // ignore: use_build_context_synchronously
-              Navigator.pop(context, true); // Kembali ke YourArticlesScreen
-            } else {
-              // ignore: use_build_context_synchronously
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(result['message'] ?? 'Failed to create article')),
-              );
-            }
-          },
-          child: const Text(
-            'Post',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   // Method untuk membangun Bottom Navigation Bar
   Widget _buildBottomNavigationBar() {
     return Container(
@@ -345,9 +185,8 @@ class _CreateArticleScreenState extends State<CreateArticleScreen> {
         border: Border(top: BorderSide(color: AppTheme.secondaryColor, width: 1.0)),
       ),
       child: BottomNavigationBar(
-        currentIndex: _selectedIndex,
+        currentIndex: 2,
         onTap: (index) {
-          setState(() => _selectedIndex = index);
           // Navigasi ke HomeScreen jika tombol Home ditekan
           if (index == 0) {
             Navigator.pushAndRemoveUntil(

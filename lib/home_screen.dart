@@ -2,15 +2,17 @@
 
 import 'package:flutter/material.dart';
 import 'create_article_screen.dart';
-import 'profile_screen.dart'; // Tambahkan ini
+import 'profile_screen.dart' as profile; // Tambahkan ini dengan prefix
 import 'notifications_screen.dart'; // Tambahkan di bagian import
-import 'services/api_service.dart'; // Import ApiService
+import 'services/api_service.dart';
+import 'search_screen.dart'; // Tambahkan import ini
 
 // =============================================================
 // 1. DATA MODELS
 // Memisahkan data dari UI adalah praktik terbaik.
 // =============================================================
 class Article {
+  final String id;
   final String category;
   final String title;
   final String description;
@@ -18,6 +20,7 @@ class Article {
   final String time;
 
   const Article({
+    required this.id,
     required this.category,
     required this.title,
     required this.description,
@@ -28,6 +31,7 @@ class Article {
   // Tambahkan factory constructor untuk membuat instance Article dari JSON
   factory Article.fromJson(Map<String, dynamic> json) {
     return Article(
+      id: json['id']?.toString() ?? '',
       category: json['category'] ?? '',
       title: json['title'] ?? '',
       description: json['description'] ?? '',
@@ -266,15 +270,20 @@ class _HomeScreenState extends State<HomeScreen> {
   BottomNavigationBar _buildBottomNavigationBar() {
     return BottomNavigationBar(
       items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Explore'),
-          BottomNavigationBarItem(icon: Icon(Icons.add_circle_outline), label: 'Create'),
-          BottomNavigationBarItem(icon: Icon(Icons.notifications_none), label: 'Notifications'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+        BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Explore'),
+        BottomNavigationBarItem(icon: Icon(Icons.add_circle_outline), label: 'Create'),
+        BottomNavigationBarItem(icon: Icon(Icons.notifications_none), label: 'Notifications'),
+        BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Profile'),
       ],
       currentIndex: _bottomNavIndex,
       onTap: (index) {
-        if (index == 2) {
+        if (index == 1) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const SearchScreen()),
+          );
+        } else if (index == 2) {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const CreateArticleScreen()),
@@ -287,7 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
         } else if (index == 4) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const ProfileScreen()),
+            MaterialPageRoute(builder: (context) => const profile.ProfileScreen()),
           );
         } else {
           setState(() => _bottomNavIndex = index);
@@ -303,6 +312,8 @@ class _HomeScreenState extends State<HomeScreen> {
       elevation: 5.0,
     );
   }
+
+  // Pada widget list artikel:
 }
 
 // =============================================================

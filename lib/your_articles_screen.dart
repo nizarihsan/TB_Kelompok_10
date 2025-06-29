@@ -5,7 +5,7 @@ import 'create_article_screen.dart';
 import 'profile_screen.dart';
 import 'notifications_screen.dart'; // Tambahkan di bagian import
 import 'edit_article_screen.dart'; // Tambahkan import ini
-import 'services/api_service.dart'; // Tambahkan import untuk ApiService
+import 'services/api_service.dart';
 
 // Bagian 1: Definisi Tema Aplikasi
 // Warna-warna ini diambil dari variabel root CSS.
@@ -78,6 +78,21 @@ class _YourArticlesScreenState extends State<YourArticlesScreen> {
           .map((e) => Article.fromJson(e))
           .toList();
     });
+  }
+
+  // Untuk delete
+  void deleteArticle(String id, int index) async {
+    final result = await ApiService.deleteArticle(id);
+    if (result['success']) {
+      setState(() {
+        articles.removeAt(index);
+      });
+    } else {
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Failed to delete article')),
+      );
+    }
   }
 
   @override
@@ -183,20 +198,9 @@ class _YourArticlesScreenState extends State<YourArticlesScreen> {
                     child: const Text('Cancel'),
                   ),
                   TextButton(
-                    onPressed: () async {
-                      final result = await ApiService.deleteArticle(articles[index].id);
-                      if (result['success']) {
-                        setState(() {
-                          articles.removeAt(index);
-                        });
-                        // ignore: use_build_context_synchronously
-                        Navigator.pop(context);
-                      } else {
-                        // ignore: use_build_context_synchronously
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(result['message'] ?? 'Failed to delete article')),
-                        );
-                      }
+                    onPressed: () {
+                      deleteArticle(articles[index].id, index);
+                      Navigator.pop(context);
                     },
                     child: const Text('Delete', style: TextStyle(color: Colors.red)),
                   ),
