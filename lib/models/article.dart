@@ -37,6 +37,8 @@ class Article {
       author: Author.fromJson(json['author'] ?? {}),
     );
   }
+
+  String get date => publishedAt;
 }
 
 class Author {

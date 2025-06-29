@@ -95,53 +95,168 @@ class _CreateArticleScreenState extends State<CreateArticleScreen> {
           key: _formKey,
           child: ListView(
             children: [
+              // Title
+              const Text('Title', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(labelText: 'Judul'),
+                style: const TextStyle(fontSize: 16),
+                decoration: InputDecoration(
+                  hintText: 'Enter title',
+                  filled: true,
+                  fillColor: Color(0xFFE7EDF3),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                ),
                 validator: (v) => v == null || v.isEmpty ? 'Judul wajib diisi' : null,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 20),
+
+              // Read Time
+              const Text('Read Time', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _readTimeController,
+                style: const TextStyle(fontSize: 16),
+                decoration: InputDecoration(
+                  hintText: 'Enter read time (e.g. 5 menit)',
+                  filled: true,
+                  fillColor: Color(0xFFE7EDF3),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                ),
+                validator: (v) => v == null || v.isEmpty ? 'Waktu baca wajib diisi' : null,
+              ),
+              const SizedBox(height: 20),
+
+              // Image URL
+              const Text('Image URL', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _imageUrlController,
+                style: const TextStyle(fontSize: 16),
+                decoration: InputDecoration(
+                  hintText: 'Enter image URL',
+                  filled: true,
+                  fillColor: Color(0xFFE7EDF3),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                ),
+                validator: (v) => v == null || v.isEmpty ? 'URL gambar wajib diisi' : null,
+              ),
+              const SizedBox(height: 20),
+
+              // Category
+              const Text('Category', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+              const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 value: _selectedCategory,
                 items: _categories
                     .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
                     .toList(),
                 onChanged: (val) => setState(() => _selectedCategory = val),
-                decoration: const InputDecoration(labelText: 'Kategori'),
+                decoration: InputDecoration(
+                  hintText: 'Select category',
+                  filled: true,
+                  fillColor: Color(0xFFE7EDF3),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                ),
                 validator: (v) => v == null || v.isEmpty ? 'Kategori wajib dipilih' : null,
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _readTimeController,
-                decoration: const InputDecoration(labelText: 'Waktu Baca (misal: 5 menit)'),
-                validator: (v) => v == null || v.isEmpty ? 'Waktu baca wajib diisi' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _imageUrlController,
-                decoration: const InputDecoration(labelText: 'URL Gambar'),
-                validator: (v) => v == null || v.isEmpty ? 'URL gambar wajib diisi' : null,
-              ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 20),
+
+              // Tags
+              const Text('Tags', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _tagsController,
-                decoration: const InputDecoration(
-                  labelText: 'Tags (pisahkan dengan koma, contoh: tech,news)',
+                style: const TextStyle(fontSize: 16),
+                decoration: InputDecoration(
+                  hintText: 'Enter tags separated by comma',
+                  filled: true,
+                  fillColor: Color(0xFFE7EDF3),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 20),
+
+              // Content
+              const Text('Content', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _contentController,
-                decoration: const InputDecoration(labelText: 'Isi Artikel'),
+                style: const TextStyle(fontSize: 16),
                 maxLines: 8,
+                decoration: InputDecoration(
+                  hintText: 'Write your article content here...',
+                  filled: true,
+                  fillColor: Color(0xFFE7EDF3),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                ),
                 validator: (v) => v == null || v.isEmpty ? 'Isi artikel wajib diisi' : null,
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _isLoading ? null : handleCreateArticle,
-                child: _isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text('Buat Artikel'),
+              const SizedBox(height: 28),
+
+              // Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.remove_red_eye_outlined),
+                      label: const Text('Preview'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        side: const BorderSide(color: Color(0xFFE7EDF3)),
+                        backgroundColor: Color(0xFFF8FAFC),
+                      ),
+                      onPressed: () {
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.save_outlined),
+                      label: _isLoading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Text('Create'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF1672CE),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      onPressed: _isLoading ? null : handleCreateArticle,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

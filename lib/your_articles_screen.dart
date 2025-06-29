@@ -6,6 +6,7 @@ import 'profile_screen.dart';
 import 'notifications_screen.dart'; // Tambahkan di bagian import
 import 'edit_article_screen.dart'; // Tambahkan import ini
 import 'services/api_service.dart';
+import 'models/article.dart' as article_model; // Gunakan prefix untuk menghindari konflik
 
 // Bagian 1: Definisi Tema Aplikasi
 // Warna-warna ini diambil dari variabel root CSS.
@@ -20,35 +21,7 @@ class AppTheme {
 }
 
 // Bagian 2: Model Data Sederhana untuk Artikel
-// Membuat model data membuat kode daftar menjadi lebih bersih.
-class Article {
-  final String id;
-  final String title;
-  final String publishedDate;
-  final String imageUrl;
-  final String body;
-  final String category;
-
-  Article({
-    required this.id,
-    required this.title,
-    required this.publishedDate,
-    required this.imageUrl,
-    required this.body,
-    required this.category,
-  });
-
-  factory Article.fromJson(Map<String, dynamic> json) {
-    return Article(
-      id: json['id']?.toString() ?? '',
-      title: json['title'] ?? '',
-      publishedDate: json['published_date'] ?? '',
-      imageUrl: json['image_url'] ?? '',
-      body: json['body'] ?? '',
-      category: json['category'] ?? '',
-    );
-  }
-}
+// Model Article diimpor dari models/article.dart
 
 // Bagian 3: Widget Utama Halaman
 class YourArticlesScreen extends StatefulWidget {
@@ -63,7 +36,7 @@ class _YourArticlesScreenState extends State<YourArticlesScreen> {
   int _selectedIndex = 3;
 
   // Daftar data artikel
-  List<Article> articles = [];
+  List<article_model.Article> articles = [];
 
   @override
   void initState() {
@@ -75,7 +48,7 @@ class _YourArticlesScreenState extends State<YourArticlesScreen> {
     final result = await ApiService.getUserArticles();
     setState(() {
       articles = (result['data']['articles'] as List)
-          .map((e) => Article.fromJson(e))
+          .map((e) => article_model.Article.fromJson(e))
           .toList();
     });
   }
@@ -120,7 +93,7 @@ class _YourArticlesScreenState extends State<YourArticlesScreen> {
         child: IconButton(
           icon: const Icon(Icons.add, color: Colors.white, size: 28),
           onPressed: () async {
-            final newArticle = await Navigator.push<Article>(
+            final newArticle = await Navigator.push<article_model.Article>(
               context,
               MaterialPageRoute(builder: (context) => const CreateArticleScreen()),
             );
@@ -181,7 +154,7 @@ class _YourArticlesScreenState extends State<YourArticlesScreen> {
             ).then((updatedArticle) {
               if (updatedArticle != null) {
                 setState(() {
-                  articles[index] = updatedArticle;
+                  articles[index] = updatedArticle as article_model.Article;
                 });
               }
             });
@@ -263,7 +236,7 @@ class _YourArticlesScreenState extends State<YourArticlesScreen> {
 
 // Bagian 4: Widget Kustom untuk setiap item dalam daftar artikel
 class ArticleListItem extends StatelessWidget {
-  final Article article;
+  final article_model.Article article;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -313,7 +286,7 @@ class ArticleListItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    article.publishedDate,
+                    article.date, // Ganti dengan properti yang benar dari model Article, misal 'date' atau 'publishedAt'
                     style: GoogleFonts.notoSans(
                       fontSize: 14,
                       color: AppTheme.textSecondary,
