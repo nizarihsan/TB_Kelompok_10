@@ -2,6 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'your_articles_screen.dart'; // Import model Article
+import 'services/api_service.dart'; // Import ApiService
 
 // Bagian 1: Definisi Tema Aplikasi
 // Warna dan gaya teks yang konsisten sesuai dengan CSS.
@@ -36,6 +37,7 @@ class _EditArticleScreenState extends State<EditArticleScreen> {
   late TextEditingController _titleController;
   late TextEditingController _dateController;
   late TextEditingController _imageUrlController;
+  late TextEditingController _contentController; // Add this line
 
   @override
   void initState() {
@@ -43,6 +45,7 @@ class _EditArticleScreenState extends State<EditArticleScreen> {
     _titleController = TextEditingController(text: widget.article.title);
     _dateController = TextEditingController(text: widget.article.publishedDate);
     _imageUrlController = TextEditingController(text: widget.article.imageUrl);
+    _contentController = TextEditingController(text: widget.article.body); // Use the correct property name (replace 'body' with the actual property if different)
   }
 
   @override
@@ -50,6 +53,7 @@ class _EditArticleScreenState extends State<EditArticleScreen> {
     _titleController.dispose();
     _dateController.dispose();
     _imageUrlController.dispose();
+    _contentController.dispose(); // Add this line
     super.dispose();
   }
 
@@ -105,7 +109,7 @@ class _EditArticleScreenState extends State<EditArticleScreen> {
           const SizedBox(height: 24.0),
           _buildCategoryDropdown(),
           const SizedBox(height: 24.0),
-          _buildTextField(label: 'Content', hint: 'Write your article content here...', minLines: 8, controller: TextEditingController()),
+          _buildTextField(label: 'Content', hint: 'Write your article content here...', minLines: 8, controller: _contentController),
           const SizedBox(height: 24.0),
           _buildImageUploader(),
         ],
@@ -143,15 +147,25 @@ class _EditArticleScreenState extends State<EditArticleScreen> {
             child: ElevatedButton.icon(
               icon: const Icon(Icons.save),
               label: const Text('Update'),
-              onPressed: () {
-                // Simpan perubahan (bisa update ke backend di sini)
-                Navigator.pop(context, Article(
-                  title: _titleController.text,
-                  publishedDate: _dateController.text,
-                  imageUrl: _imageUrlController.text,
-                  body: '', // Tambahkan jika ada field body
-                  category: _selectedCategory ?? '',
-                ));
+              onPressed: () async {
+                final result = await ApiService.updateArticle(
+                  widget.article.id,
+                  {
+                    "title": _titleController.text,
+                    "category": _selectedCategory,
+                    "imageUrl": _imageUrlController.text,
+                    "content": _contentController.text,
+                  },
+                );
+                if (result['success']) {
+                  // ignore: use_build_context_synchronously
+                  Navigator.pop(context, true);
+                } else {
+                  // ignore: use_build_context_synchronously
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(result['message'] ?? 'Failed to update article')),
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white,

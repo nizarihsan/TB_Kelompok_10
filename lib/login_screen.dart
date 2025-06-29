@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'api_service.dart';
+import 'services/api_service.dart';
 import 'home_screen.dart';
 import 'register_screen.dart'; // Pastikan path sudah benar
 import 'onboarding_screen.dart'; // Pastikan path sudah benar
@@ -37,15 +37,14 @@ class _LoginScreenState extends State<LoginScreen> {
       error = null;
     });
     final result = await ApiService.login(
-      email: emailController.text,
-      password: passwordController.text,
+      emailController.text,
+      passwordController.text,
     );
     setState(() {
       isLoading = false;
     });
     if (result['success'] == true) {
-      // Berhasil login, akses token: result['data']['token']
-      // Navigasi ke HomeScreen
+      await ApiService.saveToken(result['data']['token']);
       Navigator.pushReplacement(
         // ignore: use_build_context_synchronously
         context,
@@ -53,7 +52,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     } else {
       setState(() {
-        error = 'Login gagal. Email atau password salah.';
+        error = result['message'] ?? 'Login gagal. Email atau password salah.';
       });
     }
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
-import 'api_service.dart'; // Pastikan file ini sudah ada sesuai jawaban sebelumnya
+import 'services/api_service.dart';
+import 'home_screen.dart'; // Import HomeScreen
 
 // Bagian 1: Definisi Tema Aplikasi
 class AppTheme {
@@ -40,31 +41,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
     setState(() => isLoading = true);
-    final result = await ApiService.register(
-      email: emailController.text,
-      password: passwordController.text,
-      name: nameController.text.isEmpty ? "User" : nameController.text,
-      title: titleController.text.isEmpty ? "User" : titleController.text,
-      avatar: avatarController.text.isEmpty
+    final result = await ApiService.register({
+      "email": emailController.text,
+      "password": passwordController.text,
+      "name": nameController.text.isEmpty ? "User" : nameController.text,
+      "title": titleController.text.isEmpty ? "User" : titleController.text,
+      "avatar": avatarController.text.isEmpty
           ? "https://ui-avatars.com/api/?name=User"
           : avatarController.text,
-    );
+    });
     setState(() => isLoading = false);
 
     if (result['success'] == true) {
-      // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registration successful! Please log in.')),
-      );
+      await ApiService.saveToken(result['data']['token']);
       Navigator.pushReplacement(
         // ignore: use_build_context_synchronously
         context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     } else {
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'] ?? 'Registration failed')),
+        SnackBar(content: Text(result['message'] ?? 'Register failed')),
       );
     }
   }

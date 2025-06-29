@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'home_screen.dart'; // Tambahkan ini
 import 'profile_screen.dart'; // Tambahkan ini di bagian import
 import 'notifications_screen.dart'; // Tambahkan di bagian import
-import 'your_articles_screen.dart' as your_articles; // Import model Article dengan prefix
+import '../services/api_service.dart'; // Import ApiService
 
 // Bagian 1: Definisi Tema Aplikasi
 // Variabel warna dan gaya teks yang diambil dari CSS.
@@ -306,15 +306,24 @@ class _CreateArticleScreenState extends State<CreateArticleScreen> {
             padding: const EdgeInsets.symmetric(vertical: 8), // Tinggi tombol tipis
             elevation: 0,
           ),
-          onPressed: () {
-            final newArticle = your_articles.Article(
-              title: _titleController.text,
-              publishedDate: DateTime.now().toString(),
-              imageUrl: _imageUrlController.text,
-              body: _contentController.text,
-              category: _selectedCategory ?? '',
-            );
-            Navigator.pop(context, newArticle); // Kembalikan ke YourArticlesScreen
+          onPressed: () async {
+            final result = await ApiService.createArticle({
+              "title": _titleController.text,
+              "category": _selectedCategory,
+              "readTime": "5 menit",
+              "imageUrl": _imageUrlController.text,
+              "tags": [],
+              "content": _contentController.text,
+            });
+            if (result['success']) {
+              // ignore: use_build_context_synchronously
+              Navigator.pop(context, true); // Kembali ke YourArticlesScreen
+            } else {
+              // ignore: use_build_context_synchronously
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(result['message'] ?? 'Failed to create article')),
+              );
+            }
           },
           child: const Text(
             'Post',

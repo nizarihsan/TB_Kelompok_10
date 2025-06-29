@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:tb10/services/api_service.dart';
 
 // Bagian 1: Definisi Tema Aplikasi
 class AppTheme {
@@ -28,6 +29,15 @@ class Article {
     required this.description,
     required this.timeAgo,
   });
+
+  factory Article.fromJson(Map<String, dynamic> json) {
+    return Article(
+      imageUrl: json['imageUrl'] ?? '',
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      timeAgo: json['timeAgo'] ?? '',
+    );
+  }
 }
 
 // Bagian 3: String SVG untuk Ikon
@@ -56,26 +66,22 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   int _selectedIndex = 0; // "Beranda" aktif secara default
 
-  final List<Article> articles = [
-    Article(
-      imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuAVq8-pYpsUyI4VJdQHtOgKlX-8Si0pyMvJVKUSF831n-AISJjDAdjc5gvDYG7Zh9G6YGy8sRTFSwIgfMr1DtXEnvsSfSBFXxViuGh3rehaDEpkmLdkomHtu2Estyl3jp9EXOJqYvg7TT_c1swySrWOQ6UL_nrJhwKIa_hY7XhkGLPEbyOikPG6vFi3U1AhcdAwEwNcZyvGv_qOZnHFF9zTuFo0lZ54KFRWKBJD4pY0qdzKRjCOZAlcDTRHzb2AQnUV52Jx6oKr1ec",
-      title: "Pemerintah mengumumkan paket stimulus baru",
-      description: "Paket tersebut bertujuan untuk meningkatkan ekonomi dan menciptakan lapangan kerja.",
-      timeAgo: "1 jam yang lalu",
-    ),
-    Article(
-      imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuBFUh7FuR7B6VmYpBoaI9rHuleTuIA8LE5WIgD2n8r0Dny6AzRfI_HbYwpl-AgaO7yfYiRRoeO6jLksWRDj07qFi7X1j5xXa-06zBNiy2Fu--EGDG_aV3755I7if__FOghYmSTIQZkaEgykt8P9KqMtQPD9G1gq-cXweFFSGG38WEqIqOY-MyEnRLCW0PY7B5cULoNM5_DUth_lqcxxOEYBZiAiLQ7SIoDfXUJSj7MDvdqbKPsR6qMd5BX0uXCtB3Oe4wPjYW63MBw",
-      title: "Perusahaan teknologi meluncurkan produk baru",
-      description: "Produk ini diharapkan dapat merevolusi industri.",
-      timeAgo: "2 jam yang lalu",
-    ),
-    Article(
-      imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuAAkDNrf1VNJkQk0nmKA1RuvlCq29MxppEo0k-2SEY5Rkbui9ix_qhATZBPRX6K_3WdDro2BQkeHyxGN5LRXzkBcUPJIHwxjIeWcU1eXKE03952uf-NKA_qG4Hm5RKX694RKhVvvcMLMF5H9ibK7dB52z63AVEeq1YFxhqx_9RweP_vKz1qsroWvvKRRRaVOMYr4Y6n0Fa8ozKZwCueTqmUsCaV2CI-HayM1DAgaidvsHDpWAoVgDVu1kKmU_2BpqwXzmYzl_ON89c",
-      title: "Ilmuwan membuat penemuan terobosan",
-      description: "Penemuan ini dapat memiliki implikasi besar bagi masa depan.",
-      timeAgo: "3 jam yang lalu",
-    ),
-  ];
+  List<Article> _articles = []; // Daftar artikel yang akan ditampilkan
+
+  @override
+  void initState() {
+    super.initState();
+    fetchBookmarks(); // Ambil data bookmark saat inisialisasi
+  }
+
+  Future<void> fetchBookmarks() async {
+    final result = await ApiService.getBookmarks();
+    setState(() {
+      _articles = (result['data']['articles'] as List)
+          .map((e) => Article.fromJson(e))
+          .toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,8 +126,8 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _buildBody() {
     return ListView.separated(
       padding: const EdgeInsets.all(16.0),
-      itemCount: articles.length,
-      itemBuilder: (context, index) => ArticleCard(article: articles[index]),
+      itemCount: _articles.length,
+      itemBuilder: (context, index) => ArticleCard(article: _articles[index]),
       separatorBuilder: (context, index) => const SizedBox(height: 24),
     );
   }

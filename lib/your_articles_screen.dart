@@ -5,6 +5,7 @@ import 'create_article_screen.dart';
 import 'profile_screen.dart';
 import 'notifications_screen.dart'; // Tambahkan di bagian import
 import 'edit_article_screen.dart'; // Tambahkan import ini
+import 'services/api_service.dart'; // Tambahkan import untuk ApiService
 
 // Bagian 1: Definisi Tema Aplikasi
 // Warna-warna ini diambil dari variabel root CSS.
@@ -21,15 +22,32 @@ class AppTheme {
 // Bagian 2: Model Data Sederhana untuk Artikel
 // Membuat model data membuat kode daftar menjadi lebih bersih.
 class Article {
+  final String id;
   final String title;
   final String publishedDate;
   final String imageUrl;
+  final String body;
+  final String category;
 
   Article({
+    required this.id,
     required this.title,
     required this.publishedDate,
-    required this.imageUrl, required String body, required String category,
+    required this.imageUrl,
+    required this.body,
+    required this.category,
   });
+
+  factory Article.fromJson(Map<String, dynamic> json) {
+    return Article(
+      id: json['id']?.toString() ?? '',
+      title: json['title'] ?? '',
+      publishedDate: json['published_date'] ?? '',
+      imageUrl: json['image_url'] ?? '',
+      body: json['body'] ?? '',
+      category: json['category'] ?? '',
+    );
+  }
 }
 
 // Bagian 3: Widget Utama Halaman
@@ -45,23 +63,22 @@ class _YourArticlesScreenState extends State<YourArticlesScreen> {
   int _selectedIndex = 3;
 
   // Daftar data artikel
-  final List<Article> articles = [
-    Article(
-      title: 'The Future of Sustainable Energy',
-      publishedDate: 'Published 2 days ago',
-      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDDWqxKPhtwwROoblRlTV0RcEuyKttJ0j1-Qdjttfrrw6NcxzBOgDPoO8L9PX0ntBqEs752cauM5cH8HsFTmI87Og6lZCD9zt9IOS2XA5mrMf4zD5MwE7pDneMBGQo2ZgJXPIUmLF3sZP-7ZyavTZgwceOcGNbO6g5gKjZ-l4yD8Cpt8E1lamQ0zuQmqJ4nMD0uEDvw2MxhHWj8U9WVsFd7Tz2oCOmQETor3tahlAswKcswglfGkWhsPoDCL1KtT795asm30U13oOC2', body: '', category: '',
-    ),
-    Article(
-      title: 'Exploring the Depths of the Ocean',
-      publishedDate: 'Published 1 week ago',
-      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB0XNeeZiBLvmnYHG50sl4aSb0UzTgMHiLtsd-4y922ROevWdA894upmdM03hzhqRso3YaxXKs3OE8au88GsMo8KI5D_FjeV2R0f9w_DXcxGPmPJpX99qgp6U3PtdfLe9RdnBsBUq1vxJdAaSEPExwcKiIiO_vd7NG7vWc6WJ3e7muNS1NxdIpZZbLr2Rfa2h2K858N8bUPLavSgxElWRAKucbpqe_l8zD8KFu9b9cBtAo_yft0c6Chh74RiY0zJxoWIKHZxVm7z5Ni', body: '', category: '',
-    ),
-    Article(
-      title: 'The Rise of Artificial Intelligence',
-      publishedDate: 'Published 2 weeks ago',
-      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDFyc3P8puYxTQuvnw-hFb4ZzmJwG0xnEXWbQv5kcfgLibjRtWthtMmDwQ0a6m4t_j6yJISdHrN2zFyePn4bb3ajU0FoN4Z4M_fTewT2T2w-OrjD8SklRCsZd3NCoFfUfOr5ybYVeB2ciSBIZlS6bAFqiRIIgp-og46xwxHGQLg3I8cmqyjqkTODrcCHOGRDK4ikfpJvCOyD3kvAltp8hzPj1RUPxqX2MoQf6oMpWHtq9b2ucEfXNy-dE8M0v-MsnUpOb2C2i_JQ3F_', body: '', category: '',
-    ),
-  ];
+  List<Article> articles = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUserArticles();
+  }
+
+  Future<void> fetchUserArticles() async {
+    final result = await ApiService.getUserArticles();
+    setState(() {
+      articles = (result['data']['articles'] as List)
+          .map((e) => Article.fromJson(e))
+          .toList();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,11 +183,20 @@ class _YourArticlesScreenState extends State<YourArticlesScreen> {
                     child: const Text('Cancel'),
                   ),
                   TextButton(
-                    onPressed: () {
-                      setState(() {
-                        articles.removeAt(index);
-                      });
-                      Navigator.pop(context);
+                    onPressed: () async {
+                      final result = await ApiService.deleteArticle(articles[index].id);
+                      if (result['success']) {
+                        setState(() {
+                          articles.removeAt(index);
+                        });
+                        // ignore: use_build_context_synchronously
+                        Navigator.pop(context);
+                      } else {
+                        // ignore: use_build_context_synchronously
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(result['message'] ?? 'Failed to delete article')),
+                        );
+                      }
                     },
                     child: const Text('Delete', style: TextStyle(color: Colors.red)),
                   ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'create_article_screen.dart';
 import 'profile_screen.dart'; // Tambahkan ini
 import 'notifications_screen.dart'; // Tambahkan di bagian import
+import 'services/api_service.dart'; // Import ApiService
 
 // =============================================================
 // 1. DATA MODELS
@@ -23,6 +24,17 @@ class Article {
     required this.imageUrl,
     required this.time,
   });
+
+  // Tambahkan factory constructor untuk membuat instance Article dari JSON
+  factory Article.fromJson(Map<String, dynamic> json) {
+    return Article(
+      category: json['category'] ?? '',
+      title: json['title'] ?? '',
+      description: json['description'] ?? '',
+      imageUrl: json['imageUrl'] ?? '',
+      time: json['time'] ?? '',
+    );
+  }
 }
 
 // =============================================================
@@ -41,51 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _selectedCategory = 'For You';
 
   // --- Data Source (Contoh data, bisa diganti dari API) ---
-  final List<Article> _latestNews = const [
-    Article(
-      category: 'Technology',
-      title: 'Tech giants invest in AI research',
-      description:
-          'Leading tech companies are pouring billions into artificial intelligence research, aiming to revolutionize industries and enhance user experiences across various sectors.',
-      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCMV8Z_1ooHaHVCX7t5sWeFOqJvGbWthCeKAwEvbQIzEhutnJ1cRgQ-sFDMLIUpALs3suGEzBWxn54xVOHhu_JqGI_mbp1sMaCK93s71CW1KwfnQmSWUZN0eTQAG58YpwHuFDMCAxI_QWpheQAeM3NMGFB8b4jt3ravPeS3u2ZGclBQjvjGHzdSVaZkxDKPHB48wJ_tATgyd6YP02GcSOjD9wxqm24PThK7vLBOk28HGi6GHtGNkuFJAKWLS8xJhJlkowS6_T7XigpC',
-      time: '2 hours ago',
-    ),
-    Article(
-      category: 'Politics',
-      title: 'Government announces new economic policy',
-      description:
-          'The government unveiled a comprehensive economic policy aimed at boosting growth, creating jobs, and reducing inequality through targeted investments and fiscal reforms.',
-      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBQAwadxpSXh47BCeokOzXFkJqHbFwZc29C74Wj6AaSEaTf43R_C8LmsMa48kc_yZG2zE-CI2pSTdyxrNc1j2Gj3YAl5TNkAwD7Tahe3xPFx7z27gX7ZYflZ5btUKSsbzc15HJIsxokINGvpcY63W3vVifZPIjD4vCqUxagsTnI0hnS_1tiJoWrClCT2YI90loHvtR_Yr7mwwVaKD_Zxistf9nc2W-HKmA5UxUemJgNR1_mberQ83wC3T_8y21if5jVQMu7-KAK_pu-',
-      time: '5 hours ago',
-    ),
-    Article(
-      category: 'Business',
-      title: 'Market sees record gains',
-      description:
-          'The stock market experienced a surge, reaching record highs as investor confidence soared amid positive economic indicators and strong corporate earnings.',
-      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCrChucb0M1eBu-yKpIMsKwL9UzYoee2R8rUkweZSH8cANXkFyRXMwbSSr1XAovXJ5JDXNkKCoL368i4Qgf_HaYGiPlyNVmMEjo_jbmMvi96sCXusFmMxYR9HFwSjimkG6QRtxqRpw5SG1O1nkiDJyI00zWnjAkfx_9s3nboGHhZmsKriazYWZn9e8DUOq6SaCMyr2EV9iWB31ZQHtKPCsMBKsBr0Z6ytdeBI0_6FE0wWooGUr_4ownmXKNLtWHpoC6WIJu5_qfXQ2K',
-      time: 'Yesterday',
-    ),
-  ];
-
-  final List<Article> _trendingNews = const [
-    Article(
-      category: 'Science',
-      title: 'New discovery in space exploration',
-      description:
-          'Scientists have made a groundbreaking discovery in space, potentially altering our understanding of the universe.',
-      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAZv34QP0yPALmosZP1WtiTacm2j_xfNDEPu8G6S9QhDgLTf9Nhbr0_2M_K6At3tHMqaSVrK526w9SCHvwLIcZS9UCczMQBFPb0skJ2SfcZXOT8gcJsM_ZtCkGFDbfg86wY4umX-3aG-NitusFYrSuR6Mvp2mUqRpH-1-Q2edI1XP8YUWvNKVPtfHCWlpfeyUz0S_EwMYNm2cQ0OGM3BQLUWx2hM7a1o5iSROPwdWxVwTzRQhv-Af2uMUOsTlY3WQNbZKH2HWdhpgJR',
-      time: '3 hours ago',
-    ),
-    Article(
-      category: 'Health',
-      title: 'Breakthrough in cancer treatment',
-      description:
-          'Researchers have announced a significant breakthrough in cancer treatment, offering hope for improved outcomes.',
-      imageUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBj1G0-NR7-hw_7iPow9-Y8dCYMTvN7492DwOqEHYsNa0nlwPXWSP5Fhp7g2Lj-LxeEyyR3zSLYSjAVTGuIuiyEoZKKrm6KNJcYGiJbs6P8xFWBxT3WPs-GrSue5nLsQpQo4kBrX3lRfxtjsxAOnq9oiYrtnCio1UJqiPW_Y6qqVdE_crtvHpnQDgaF3DlxV0SJnnBEbOVeDYR3W2rgquUuz0DSVnfPqDok88g1-f7RYPx5TAHiSNKSbPTF8_R-orFNV1eA6TvpUOqW',
-      time: '10 hours ago',
-    ),
-  ];
+  // final List<Article> _latestNews = [];
 
   final List<String> _categories = const [
     'For You',
@@ -95,6 +63,39 @@ class _HomeScreenState extends State<HomeScreen> {
     'Technology',
     'Sports'
   ];
+
+  List<Article> _articles = [];
+  List<Article> _trendingArticles = [];
+  bool _isLoading = true;
+
+  // --- Lifecycle Methods ---
+  @override
+  void initState() {
+    super.initState();
+    fetchArticles();
+    fetchTrending();
+  }
+
+  // --- Data Fetching ---
+  Future<void> fetchArticles({String? category}) async {
+    setState(() => _isLoading = true);
+    final result = await ApiService.getArticles(category: category);
+    setState(() {
+      _articles = (result['data']['articles'] as List)
+          .map((e) => Article.fromJson(e))
+          .toList();
+      _isLoading = false;
+    });
+  }
+
+  Future<void> fetchTrending() async {
+    final result = await ApiService.getTrendingArticles();
+    setState(() {
+      _trendingArticles = (result['data']['articles'] as List)
+          .map((e) => Article.fromJson(e))
+          .toList();
+    });
+  }
 
   // --- Build Method ---
   @override
@@ -194,6 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 setState(() {
                   _selectedCategory = category;
                 });
+                fetchArticles(category: _selectedCategory);
               },
               backgroundColor: AppColors.accent,
               selectedColor: AppColors.primary,
@@ -229,10 +231,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildLatestNewsList() {
+    if (_isLoading) {
+      return const SliverToBoxAdapter(
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return SliverList.builder(
-      itemCount: _latestNews.length,
+      itemCount: _articles.length,
       itemBuilder: (context, index) {
-        return LatestNewsCard(article: _latestNews[index]);
+        return LatestNewsCard(article: _articles[index]);
       },
     );
   }
@@ -247,9 +255,9 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisSpacing: 8.0,
           childAspectRatio: MediaQuery.of(context).size.width > 600 ? 1.2 : 1.3,
         ),
-        itemCount: _trendingNews.length,
+        itemCount: _trendingArticles.length,
         itemBuilder: (context, index) {
-          return TrendingNowCard(article: _trendingNews[index]);
+          return TrendingNowCard(article: _trendingArticles[index]);
         },
       ),
     );
